@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String?
+  role      Role     @default(CLIENT)
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account   Account?
+  tickets   Ticket[]
+  invoices  Invoice[]
+}
+
+enum Role { ADMIN CLIENT }
+
+model Account {
+  id        String        @id @default(uuid())
+  userId    String        @unique
+  user      User          @relation(fields: [userId], references: [id])
+  planId    String
+  plan      Plan          @relation(fields: [planId], references: [id])
+  status    AccountStatus @default(ACTIVE)
+  expiresAt DateTime
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  domains   Domain[]
+  databases Database[]
+  emails    EmailAccount[]
+  nodeApps  NodeApp[]
+}
+
+enum AccountStatus { ACTIVE SUSPENDED PENDING EXPIRED }
+
+model Plan {
+  id           String    @id @default(uuid())
+  name         String    @unique
+  displayName  String
+  price        Float
+  diskGB       Int
+  ramMB        Int
+  bandwidth    Int
+  maxDomains   Int
+  maxDatabases Int
+  maxEmails    Int
+  maxNodeApps  Int
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  accounts     Account[]
+  invoices     Invoice[]
+}
+
+model Domain {
+  id         String       @id @default(uuid())
+  accountId  String
+  account    Account      @relation(fields: [accountId], references: [id])
+  name       String       @unique
+  type       DomainType   @default(STATIC)
+  phpVersion String?
+  sslActive  Boolean      @default(false)
+  sslExpiry  DateTime?
+  status     DomainStatus @default(ACTIVE)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+enum DomainType   { WORDPRESS NODE STATIC PHP }
+enum DomainStatus { ACTIVE INACTIVE SUSPENDED }
+
+model Database {
+  id        String   @id @default(uuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id])
+  dbName    String
+  dbUser    String
+  sizeBytes BigInt   @default(0)
+  createdAt DateTime @default(now())
+}
+
+model EmailAccount {
+  id        String   @id @default(uuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id])
+  address   String   @unique
+  quotaMB   Int      @default(5120)
+  usedMB    Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model NodeApp {
+  id        String    @id @default(uuid())
+  accountId String
+  account   Account   @relation(fields: [accountId], references: [id])
+  name      String
+  port      Int       @unique
+  domain    String?
+  status    AppStatus @default(STOPPED)
+  pm2Id     Int?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+enum AppStatus { RUNNING STOPPED ERROR }
+
+model Ticket {
+  id        String         @id @default(uuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id])
+  subject   String
+  status    TicketStatus   @default(OPEN)
+  priority  Priority       @default(MEDIUM)
+  messages  TicketMessage[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model TicketMessage {
+  id        String   @id @default(uuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  fromAdmin Boolean  @default(false)
+  body      String
+  createdAt DateTime @default(now())
+}
+
+enum TicketStatus { OPEN IN_PROGRESS RESOLVED CLOSED }
+enum Priority    { LOW MEDIUM HIGH CRITICAL }
+
+model Invoice {
+  id        String        @id @default(uuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  planId    String
+  plan      Plan          @relation(fields: [planId], references: [id])
+  amount    Float
+  status    InvoiceStatus @default(PENDING)
+  paidAt    DateTime?
+  dueDate   DateTime
+  createdAt DateTime      @default(now())
+}
+
+enum InvoiceStatus { PENDING PAID OVERDUE CANCELLED }
