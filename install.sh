@@ -30,8 +30,40 @@ REPO_NAME=${REPO_NAME:-"iBlack14/nexhost"}
 DB_PASSWORD=$(openssl rand -hex 12)
 JWT_SECRET=$(openssl rand -hex 24)
 MYSQL_ROOT_PASS=$(openssl rand -hex 12)
-SERVER_IP=$(curl -s ifconfig.me)
 RUN_USER=${SUDO_USER:-$USER}
+MYSQL_ROOT_UPDATED=false
+
+resolve_public_host() {
+  local ipv4 ipv6 fallback
+  ipv4=$(curl -4fsS --max-time 5 ifconfig.me 2>/dev/null || true)
+  if [ -n "$ipv4" ]; then
+    SERVER_HOST_RAW="$ipv4"
+    return
+  fi
+
+  ipv6=$(curl -6fsS --max-time 8 ifconfig.me 2>/dev/null || true)
+  if [ -n "$ipv6" ]; then
+    SERVER_HOST_RAW="$ipv6"
+    return
+  fi
+
+  fallback=$(hostname -I 2>/dev/null | awk '{print $1}')
+  SERVER_HOST_RAW=${fallback:-localhost}
+}
+
+format_host_for_url() {
+  local host="$1"
+  if [[ "$host" == *:* ]]; then
+    echo "[$host]"
+  else
+    echo "$host"
+  fi
+}
+
+resolve_public_host
+SERVER_HOST_URL=$(format_host_for_url "$SERVER_HOST_RAW")
+FRONTEND_PUBLIC_URL="http://${SERVER_HOST_URL}:${FRONTEND_PORT}"
+BACKEND_PUBLIC_URL="http://${SERVER_HOST_URL}:${BACKEND_PORT}"
 
 ensure_plesk_gpg_key() {
   if grep -Rqs "autoinstall.plesk.com" /etc/apt/sources.list /etc/apt/sources.list.d 2>/dev/null; then
@@ -71,6 +103,7 @@ sudo -u postgres psql -d nexhost -c "GRANT ALL ON SCHEMA public TO nexadmin;" ||
 echo -e "${BLUE}🐬 Configurando MySQL Root...${NC}"
 if sudo mysql -e "SELECT 1;" >/dev/null 2>&1; then
   sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASS'; FLUSH PRIVILEGES;"
+  MYSQL_ROOT_UPDATED=true
 else
   echo -e "${BLUE}ℹ️ No fue posible acceder a MySQL root sin contraseña (ya existe una configuración previa).${NC}"
 fi
@@ -94,7 +127,7 @@ PORT=$BACKEND_PORT
 NODE_ENV=production
 DATABASE_URL="postgresql://nexadmin:${DB_PASSWORD}@127.0.0.1:5432/nexhost"
 JWT_SECRET=$JWT_SECRET
-NEXT_PUBLIC_API_URL="http://${SERVER_IP}:${BACKEND_PORT}/api"
+FRONTEND_URL="${FRONTEND_PUBLIC_URL}"
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=tu-email@gmail.com
@@ -112,10 +145,10 @@ echo -e "${BLUE}⚙️ Configurando Dashboard (Frontend)...${NC}"
 cd $INSTALL_DIR/frontend
 npm install
 cat <<EOF > .env.local
-NEXTAUTH_URL="http://$SERVER_IP:$FRONTEND_PORT"
+NEXTAUTH_URL="${FRONTEND_PUBLIC_URL}"
 NEXTAUTH_SECRET=$JWT_SECRET
-NEXT_PUBLIC_API_URL="http://$SERVER_IP:$BACKEND_PORT/api"
-API_URL="http://localhost:$BACKEND_PORT/api"
+NEXT_PUBLIC_API_URL="${BACKEND_PUBLIC_URL}"
+API_URL="http://127.0.0.1:$BACKEND_PORT/api"
 EOF
 
 # Build de Next.js
@@ -127,11 +160,17 @@ pm2 start npm --name nexhost-frontend -- start -- -p $FRONTEND_PORT
 # 10. Configuración de Nginx
 echo -e "${GREEN}✅ ¡INSTALACIÓN COMPLETADA!${NC}"
 echo -e "\n${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "🚀 ${GREEN}URL DEL PANEL:${NC} http://$SERVER_IP:$FRONTEND_PORT"
-echo -e "🔌 ${GREEN}URL DE LA API:${NC} http://$SERVER_IP:$BACKEND_PORT"
+echo -e "🚀 ${GREEN}PANEL:${NC} ${FRONTEND_PUBLIC_URL}"
+echo -e "🔐 ${GREEN}LOGIN:${NC} ${FRONTEND_PUBLIC_URL}/login"
+echo -e "🔌 ${GREEN}API:${NC} ${BACKEND_PUBLIC_URL}/api"
+echo -e "❤️  ${GREEN}HEALTH:${NC} ${BACKEND_PUBLIC_URL}/health"
 echo -e "🔗 ${GREEN}REPOSITORIO:${NC} https://github.com/$REPO_NAME"
 echo -e "\n🔑 ${GREEN}POSTGRES PASS:${NC} $DB_PASSWORD"
-echo -e "🔑 ${GREEN}MYSQL ROOT PASS:${NC} $MYSQL_ROOT_PASS"
+if [ "$MYSQL_ROOT_UPDATED" = true ]; then
+  echo -e "🔑 ${GREEN}MYSQL ROOT PASS:${NC} $MYSQL_ROOT_PASS"
+else
+  echo -e "🔑 ${GREEN}MYSQL ROOT PASS:${NC} (sin cambios; root ya tenía auth previa)"
+fi
 echo -e "🔑 ${GREEN}JWT/AUTH SECRET:${NC} $JWT_SECRET"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "💡 TIP: Usa 'pm2 logs' para ver el estado de las aplicaciones."
