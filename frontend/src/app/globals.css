@@ -63,18 +63,16 @@
   .pill-resolved  { @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs bg-gray-500/10  text-gray-400   border border-gray-500/20; }
 
   /* Plan badges */
-  .plan-starter  { @apply px-2.5 py-0.5 rounded text-xs bg-gray-500/15  text-gray-400   border border-gray-500/25; }
-  .plan-pro      { @apply px-2.5 py-0.5 rounded text-xs bg-blue-500/12  text-blue-400   border border-blue-500/25; }
-  .plan-business { @apply px-2.5 py-0.5 rounded text-xs bg-purple-500/12 text-purple-400 border border-purple-500/25; }
+  .plan-starter  { @apply px-2.5 py-0.5 rounded text-xs bg-gray-500/20  text-gray-400   border border-gray-500/25; }
+  .plan-pro      { @apply px-2.5 py-0.5 rounded text-xs bg-blue-500/10  text-blue-400   border border-blue-500/25; }
+  .plan-business { @apply px-2.5 py-0.5 rounded text-xs bg-purple-500/10 text-purple-400 border border-purple-500/25; }
 
   /* Nav item */
   .nav-item {
     @apply flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-nx-muted text-sm
            hover:bg-nx-bg3 hover:text-white transition-all cursor-pointer border border-transparent mx-2;
   }
-  .nav-item-active {
-    @apply bg-blue-500/12 text-nx-accent border-blue-500/20;
-  }
+  .nav-item-active { @apply bg-blue-500/10 text-nx-accent border-blue-500/20; }
 
   /* Table */
   .nx-table { @apply w-full; }
