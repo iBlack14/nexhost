@@ -26,10 +26,10 @@ FRONTEND_PORT=${FRONTEND_PORT:-3000}
 read -p "   GitHub Repository [iBlack14/nexhost]: " REPO_NAME < /dev/tty
 REPO_NAME=${REPO_NAME:-"iBlack14/nexhost"}
 
-# 2. Generación de Secretos
-DB_PASSWORD=$(openssl rand -base64 12)
-JWT_SECRET=$(openssl rand -base64 32)
-MYSQL_ROOT_PASS=$(openssl rand -base64 12)
+# 2. Generar contraseñas aleatorias
+DB_PASSWORD=$(openssl rand -hex 12)
+JWT_SECRET=$(openssl rand -hex 24)
+MYSQL_ROOT_PASS=$(openssl rand -hex 12)
 SERVER_IP=$(curl -s ifconfig.me)
 
 echo -e "\n${BLUE}📦 Instalando dependencias del sistema...${NC}"
