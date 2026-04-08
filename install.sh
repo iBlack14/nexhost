@@ -58,13 +58,13 @@ sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE nexhost TO nexadmin;"
 
 # 6. Configuración de MySQL
 echo -e "${BLUE}🐬 Configurando MySQL Root...${NC}"
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASS';" || true
-sudo mysql -e "FLUSH PRIVILEGES;"
+sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASS';" || echo -e "${BLUE}ℹ️ La contraseña de MySQL root parece ya estar configurada, saltando...${NC}"
+sudo mysql -e "FLUSH PRIVILEGES;" || true
 
 # 7. Preparar Carpeta y Clonar
 INSTALL_DIR="/opt/nexhost"
 echo -e "${BLUE}📂 Clonando proyecto en $INSTALL_DIR...${NC}"
-sudo rm -rf $INSTALL_DIR
+sudo rm -rf $INSTALL_DIR || true
 sudo mkdir -p $INSTALL_DIR
 sudo git clone https://github.com/$REPO_NAME.git $INSTALL_DIR
 sudo chown -R $USER:$USER $INSTALL_DIR
