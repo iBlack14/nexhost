@@ -42,18 +42,26 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 sudo npm install -g pm2
 
-# 4. Configuración de PostgreSQL
+# 4. Iniciar y habilitar servicios
+echo -e "${BLUE}🔄 Iniciando servicios de Base de Datos...${NC}"
+sudo systemctl enable postgresql
+sudo systemctl start postgresql
+sudo systemctl enable mysql
+sudo systemctl start mysql
+sleep 5 # Esperar a que los sockets se creen
+
+# 5. Configuración de PostgreSQL
 echo -e "${BLUE}🐘 Configurando PostgreSQL...${NC}"
 sudo -u postgres psql -c "CREATE DATABASE nexhost;" || true
 sudo -u postgres psql -c "CREATE USER nexadmin WITH PASSWORD '$DB_PASSWORD';" || true
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE nexhost TO nexadmin;" || true
 
-# 5. Configuración de MySQL
+# 6. Configuración de MySQL
 echo -e "${BLUE}🐬 Configurando MySQL Root...${NC}"
 sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASS';" || true
 sudo mysql -e "FLUSH PRIVILEGES;"
 
-# 6. Preparar Carpeta y Clonar
+# 7. Preparar Carpeta y Clonar
 INSTALL_DIR="/opt/nexhost"
 echo -e "${BLUE}📂 Clonando proyecto en $INSTALL_DIR...${NC}"
 sudo rm -rf $INSTALL_DIR
@@ -61,7 +69,7 @@ sudo mkdir -p $INSTALL_DIR
 sudo git clone https://github.com/$REPO_NAME.git $INSTALL_DIR
 sudo chown -R $USER:$USER $INSTALL_DIR
 
-# 7. Configuración del Backend
+# 8. Configuración del Backend
 echo -e "${BLUE}⚙️ Configurando API (Backend)...${NC}"
 cd $INSTALL_DIR/backend
 npm install
@@ -82,7 +90,7 @@ npx prisma generate
 pm2 delete nexhost-api || true
 pm2 start src/index.js --name nexhost-api -- --port $BACKEND_PORT
 
-# 8. Configuración del Frontend
+# 9. Configuración del Frontend
 echo -e "${BLUE}⚙️ Configurando Dashboard (Frontend)...${NC}"
 cd $INSTALL_DIR/frontend
 npm install
@@ -99,7 +107,7 @@ npm run build
 pm2 delete nexhost-frontend || true
 pm2 start npm --name nexhost-frontend -- start -- -p $FRONTEND_PORT
 
-# 9. Configuración de Nginx (Opcional - solo mostramos los comandos)
+# 10. Configuración de Nginx
 echo -e "${GREEN}✅ ¡INSTALACIÓN COMPLETADA!${NC}"
 echo -e "\n${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "🚀 ${GREEN}URL DEL PANEL:${NC} http://$SERVER_IP:$FRONTEND_PORT"
