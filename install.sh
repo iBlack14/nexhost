@@ -31,8 +31,18 @@ DB_PASSWORD=$(openssl rand -hex 12)
 JWT_SECRET=$(openssl rand -hex 24)
 MYSQL_ROOT_PASS=$(openssl rand -hex 12)
 SERVER_IP=$(curl -s ifconfig.me)
+RUN_USER=${SUDO_USER:-$USER}
+
+ensure_plesk_gpg_key() {
+  if grep -Rqs "autoinstall.plesk.com" /etc/apt/sources.list /etc/apt/sources.list.d 2>/dev/null; then
+    echo -e "${BLUE}🔐 Detectado repositorio Plesk, instalando clave GPG...${NC}"
+    sudo mkdir -p /etc/apt/trusted.gpg.d
+    curl -fsSL http://autoinstall.plesk.com/plesk.gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/plesk.gpg || true
+  fi
+}
 
 echo -e "\n${BLUE}📦 Instalando dependencias del sistema...${NC}"
+ensure_plesk_gpg_key
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y curl git build-essential postgresql postgresql-contrib mysql-server nginx
 
@@ -59,8 +69,11 @@ sudo -u postgres psql -d nexhost -c "GRANT ALL ON SCHEMA public TO nexadmin;" ||
 
 # 6. Configuración de MySQL
 echo -e "${BLUE}🐬 Configurando MySQL Root...${NC}"
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASS';" || echo -e "${BLUE}ℹ️ La contraseña de MySQL root parece ya estar configurada, saltando...${NC}"
-sudo mysql -e "FLUSH PRIVILEGES;" || true
+if sudo mysql -e "SELECT 1;" >/dev/null 2>&1; then
+  sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASS'; FLUSH PRIVILEGES;"
+else
+  echo -e "${BLUE}ℹ️ No fue posible acceder a MySQL root sin contraseña (ya existe una configuración previa).${NC}"
+fi
 
 # 7. Preparar Carpeta y Clonar
 INSTALL_DIR="/opt/nexhost"
@@ -68,7 +81,7 @@ echo -e "${BLUE}📂 Clonando proyecto en $INSTALL_DIR...${NC}"
 sudo rm -rf $INSTALL_DIR || true
 sudo mkdir -p $INSTALL_DIR
 sudo git clone https://github.com/$REPO_NAME.git $INSTALL_DIR
-sudo chown -R $USER:$USER $INSTALL_DIR
+sudo chown -R $RUN_USER:$RUN_USER $INSTALL_DIR
 
 # 8. Configurar API (Backend)
 echo -e "${BLUE}⚙️ Configurando API (Backend)...${NC}"
