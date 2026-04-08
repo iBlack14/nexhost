@@ -22,6 +22,12 @@ const requireAdmin = (req, res, next) => {
   next()
 }
 
+const requireWhmAccess = (req, res, next) => {
+  if (!['ADMIN', 'RESELLER'].includes(req.user?.role))
+    return res.status(403).json({ error: 'Acceso WHM restringido a admin/reseller' })
+  next()
+}
+
 const requireOwnership = (field = 'userId') => (req, res, next) => {
   if (req.user.role === 'ADMIN') return next()
   if (req.params[field] && req.params[field] !== req.user.id)
@@ -29,4 +35,4 @@ const requireOwnership = (field = 'userId') => (req, res, next) => {
   next()
 }
 
-module.exports = { authenticate, requireAdmin, requireOwnership }
+module.exports = { authenticate, requireAdmin, requireWhmAccess, requireOwnership }

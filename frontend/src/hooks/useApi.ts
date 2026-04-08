@@ -1,14 +1,17 @@
 // src/hooks/useApi.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
-import type { Domain, NodeApp, Ticket, AdminStats, ServerStats, User } from '@/types'
+import type {
+  Domain, NodeApp, Ticket, AdminStats, ServerStats, User,
+  WhmAccount, ProvisionJob, DnsZoneData, ServiceStatus,
+} from '@/types'
 import toast from 'react-hot-toast'
 
 // ── Me / Profile ──────────────────────────────────────────
 export const useMe = () =>
   useQuery<User>({
     queryKey: ['me'],
-    queryFn:  () => api.get('/me').then(r => r.data),
+    queryFn:  () => api.get('/auth/me').then(r => r.data),
   })
 
 // ── Domains ───────────────────────────────────────────────
@@ -46,13 +49,13 @@ export const useDeleteDomain = () => {
 export const useNodeApps = () =>
   useQuery<NodeApp[]>({
     queryKey: ['node-apps'],
-    queryFn:  () => api.get('/node-apps').then(r => r.data),
+    queryFn:  () => api.get('/apps').then(r => r.data),
   })
 
 export const useCreateNodeApp = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Partial<NodeApp>) => api.post('/node-apps', data).then(r => r.data),
+    mutationFn: (data: Partial<NodeApp>) => api.post('/apps', data).then(r => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['node-apps'] })
       toast.success('App creada')
@@ -64,7 +67,7 @@ export const useCreateNodeApp = () => {
 export const useRestartApp = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.post(`/node-apps/${id}/restart`).then(r => r.data),
+    mutationFn: (id: string) => api.patch(`/apps/${id}/status`, { status: 'RUNNING' }).then(r => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['node-apps'] })
       toast.success('App reiniciada')
@@ -76,7 +79,7 @@ export const useRestartApp = () => {
 export const useStopApp = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.post(`/node-apps/${id}/stop`).then(r => r.data),
+    mutationFn: (id: string) => api.patch(`/apps/${id}/status`, { status: 'STOPPED' }).then(r => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['node-apps'] })
       toast.success('App detenida')
@@ -152,3 +155,75 @@ export const useUpdateUserStatus = () => {
     onError: (err: any) => toast.error(err.response?.data?.error || 'Error'),
   })
 }
+
+// ── WHM ───────────────────────────────────────────────────
+export const useWhmAccounts = (params?: { status?: string; resellerId?: string }) =>
+  useQuery<WhmAccount[]>({
+    queryKey: ['whm-accounts', params],
+    queryFn: () => api.get('/admin/whm/accounts', { params }).then((r) => r.data),
+  })
+
+export const useCreateWhmAccount = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: {
+      username: string
+      primaryDomain: string
+      ownerEmail: string
+      ownerName: string
+      ownerPassword?: string
+      planName?: string
+      enableSSL?: boolean
+      ipAddress?: string
+      resellerUserId?: string
+    }) => api.post('/admin/whm/accounts', data).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['whm-accounts'] })
+      toast.success('Cuenta encolada para aprovisionamiento')
+    },
+    onError: (err: any) => toast.error(err.response?.data?.error || 'Error creando cuenta'),
+  })
+}
+
+export const useProvisionJob = (jobId?: string) =>
+  useQuery<ProvisionJob>({
+    queryKey: ['whm-job', jobId],
+    queryFn: () => api.get(`/admin/whm/jobs/${jobId}`).then((r) => r.data),
+    enabled: Boolean(jobId),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status
+      return status === 'COMPLETED' || status === 'FAILED' ? false : 3000
+    },
+  })
+
+export const useWhmDnsZones = () =>
+  useQuery<{ zones: DnsZoneData[]; cloudflareZones: any[]; cloudflareConfigured: boolean }>({
+    queryKey: ['whm-dns-zones'],
+    queryFn: () => api.get('/admin/whm/dns/zones').then((r) => r.data),
+  })
+
+export const useCreateWhmDnsRecord = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: {
+      zoneId: string
+      type: 'A' | 'CNAME' | 'TXT'
+      name: string
+      content: string
+      ttl?: number
+      proxied?: boolean
+    }) => api.post(`/admin/whm/dns/zones/${data.zoneId}/records`, data).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['whm-dns-zones'] })
+      toast.success('Registro DNS creado')
+    },
+    onError: (err: any) => toast.error(err.response?.data?.error || 'Error creando registro DNS'),
+  })
+}
+
+export const useWhmServiceStatus = () =>
+  useQuery<ServiceStatus>({
+    queryKey: ['whm-service-status'],
+    queryFn: () => api.get('/admin/whm/services/status').then((r) => r.data),
+    refetchInterval: 10000,
+  })

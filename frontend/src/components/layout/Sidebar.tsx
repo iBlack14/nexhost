@@ -6,8 +6,8 @@ import { signOut, useSession } from 'next-auth/react'
 import clsx from 'clsx'
 import {
   LayoutDashboard, Globe, Box, Database, Mail,
-  ShieldCheck, Clock, Flame, FileText, Settings,
-  CreditCard, MessageSquare, Users, Server, LogOut,
+  ShieldCheck, Clock, FileText, Settings,
+  CreditCard, MessageSquare, UserPlus, Activity, ListChecks, LogOut,
   ChevronRight,
 } from 'lucide-react'
 
@@ -39,11 +39,11 @@ export default function Sidebar({ variant, diskUsedMb = 0, diskGb = 10 }: Props)
   ]
 
   const adminNav: NavItem[] = [
-    { href: '/admin',          label: 'Dashboard',  icon: <LayoutDashboard size={15} /> },
-    { href: '/admin/users',    label: 'Usuarios',   icon: <Users size={15} /> },
-    { href: '/admin/domains',  label: 'Dominios',   icon: <Globe size={15} /> },
-    { href: '/admin/servers',  label: 'Servidor',   icon: <Server size={15} /> },
-    { href: '/admin/tickets',  label: 'Tickets',    icon: <MessageSquare size={15} /> },
+    { href: '/admin',               label: 'WHM Home',           icon: <LayoutDashboard size={15} /> },
+    { href: '/admin/accounts',      label: 'Enumerar cuentas',   icon: <ListChecks size={15} /> },
+    { href: '/admin/accounts/new',  label: 'Crear cuenta',       icon: <UserPlus size={15} /> },
+    { href: '/admin/dns',           label: 'DNS Zone Manager',   icon: <Globe size={15} /> },
+    { href: '/admin/services',      label: 'Estado del servicio',icon: <Activity size={15} /> },
   ]
 
   const bottomNav: NavItem[] = variant === 'client'
@@ -54,8 +54,8 @@ export default function Sidebar({ variant, diskUsedMb = 0, diskGb = 10 }: Props)
         { href: '/billing',  label: 'Facturación',  icon: <CreditCard size={15} /> },
       ]
     : [
-        { href: '/admin/logs',    label: 'Logs',         icon: <Flame size={15} /> },
         { href: '/admin/settings',label: 'Configuración',icon: <Settings size={15} /> },
+        { href: '/support',       label: 'Soporte',      icon: <MessageSquare size={15} /> },
       ]
 
   const nav = variant === 'admin' ? adminNav : clientNav

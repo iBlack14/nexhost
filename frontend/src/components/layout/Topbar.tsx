@@ -28,7 +28,7 @@ export default function Topbar({ variant }: Props) {
 
       {isAdmin && (
         <span className="text-[11px] bg-nx-bg3 border border-nx-border rounded-md px-2 py-0.5 text-nx-muted font-mono">
-          Admin
+          WHM
         </span>
       )}
 

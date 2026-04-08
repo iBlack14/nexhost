@@ -1,6 +1,6 @@
 // src/types/index.ts
 
-export type UserRole   = 'admin' | 'client'
+export type UserRole   = 'admin' | 'reseller' | 'client'
 export type UserStatus = 'active' | 'suspended' | 'pending' | 'cancelled'
 export type DomainType = 'wordpress' | 'node' | 'static' | 'php' | 'python'
 export type AppStatus  = 'running' | 'stopped' | 'error'
@@ -144,4 +144,78 @@ export interface ServerStats {
   connections: number
   uptime_days: number
   load_avg:   number[]
+}
+
+export type WhmAccountStatus = 'PROVISIONING' | 'ACTIVE' | 'SUSPENDED' | 'FAILED'
+export type WhmJobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED'
+
+export interface WhmAccount {
+  id: string
+  username: string
+  primaryDomain: string
+  ownerUserId: string
+  resellerUserId?: string | null
+  planName?: string | null
+  status: WhmAccountStatus
+  homeDir?: string | null
+  docRoot?: string | null
+  ipAddress?: string | null
+  port?: number | null
+  sslEnabled: boolean
+  createdAt: string
+  updatedAt: string
+  owner?: { id: string; name: string; email: string }
+  reseller?: { id: string; name: string; email: string }
+}
+
+export interface ProvisionJobStep {
+  id: string
+  jobId: string
+  step: string
+  status: WhmJobStatus
+  error?: string | null
+  createdAt: string
+  startedAt?: string | null
+  completedAt?: string | null
+}
+
+export interface ProvisionJob {
+  id: string
+  hostingAccountId?: string | null
+  requestedById?: string | null
+  status: WhmJobStatus
+  type: 'CREATE_HOSTING_ACCOUNT'
+  error?: string | null
+  createdAt: string
+  startedAt?: string | null
+  completedAt?: string | null
+  steps: ProvisionJobStep[]
+}
+
+export interface DnsZoneData {
+  id: string
+  domain: string
+  cloudflareZoneId?: string | null
+  syncStatus: string
+  records: Array<{
+    id: string
+    type: 'A' | 'CNAME' | 'TXT'
+    name: string
+    content: string
+    ttl: number
+    proxied: boolean
+    status: string
+  }>
+}
+
+export interface ServiceStatus {
+  id: string
+  nginx: string
+  mysql: string
+  postgresql: string
+  pm2: string
+  diskUsage: number
+  ramUsage: number
+  cpuUsage: number
+  capturedAt: string
 }

@@ -128,11 +128,15 @@ NODE_ENV=production
 DATABASE_URL="postgresql://nexadmin:${DB_PASSWORD}@127.0.0.1:5432/nexhost"
 JWT_SECRET=$JWT_SECRET
 FRONTEND_URL="${FRONTEND_PUBLIC_URL}"
+SERVER_PUBLIC_IP="$SERVER_HOST_RAW"
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=tu-email@gmail.com
 SMTP_PASS=tu-clave-app
 SMTP_FROM="NexHost <noreply@example.com>"
+CF_API_TOKEN=
+CF_ACCOUNT_ID=
+CF_ZONE_ID=
 EOF
 
 if [ -d "prisma/migrations" ] && [ "$(find prisma/migrations -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)" -gt 0 ]; then

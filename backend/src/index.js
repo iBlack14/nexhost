@@ -14,9 +14,17 @@ const emailRoutes   = require('./routes/emails')
 const ticketsRoutes = require('./routes/tickets')
 const plansRoutes   = require('./routes/plans')
 const adminRoutes   = require('./routes/admin')
+const { startWhmWorker } = require('./services/whmWorker.service')
 
 const app  = express()
 const PORT = process.env.PORT || 4000
+
+const checkWhmEnv = () => {
+  const missing = ['CF_API_TOKEN', 'CF_ACCOUNT_ID'].filter((key) => !process.env[key])
+  if (missing.length) {
+    console.warn(`⚠️ WHM DNS mode limitado. Faltan variables: ${missing.join(', ')}`)
+  }
+}
 
 // ─── Middleware global ───────────────────────────────────────
 app.use(helmet())
@@ -55,5 +63,7 @@ app.use((err, req, res, next) => {
 })
 
 app.listen(PORT, () => {
+  checkWhmEnv()
+  startWhmWorker()
   console.log(`🚀 NexHost API corriendo en http://localhost:${PORT}`)
 })

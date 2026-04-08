@@ -8,22 +8,164 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  password  String?
-  role      Role     @default(CLIENT)
-  avatar    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  account   Account?
-  tickets   Ticket[]
-  invoices  Invoice[]
+  id                   String           @id @default(uuid())
+  email                String           @unique
+  name                 String
+  password             String?
+  role                 Role             @default(CLIENT)
+  avatar               String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  account              Account?
+  tickets              Ticket[]
+  invoices             Invoice[]
+  resellerProfile      ResellerProfile?
+  ownedHostingAccounts HostingAccount[] @relation("OwnerAccounts")
+  resellerAccounts     HostingAccount[] @relation("ResellerAccounts")
+  provisionJobs        ProvisionJob[]   @relation("RequestedJobs")
 }
 
 enum Role {
   ADMIN
+  RESELLER
   CLIENT
+}
+
+model ResellerProfile {
+  id               String          @id @default(uuid())
+  ownerUserId      String          @unique
+  owner            User            @relation(fields: [ownerUserId], references: [id])
+  maxAccounts      Int             @default(50)
+  maxDomains       Int             @default(100)
+  status           ResellerStatus  @default(ACTIVE)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+enum ResellerStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model HostingAccount {
+  id            String               @id @default(uuid())
+  username      String               @unique
+  primaryDomain String               @unique
+  ownerUserId   String
+  owner         User                 @relation("OwnerAccounts", fields: [ownerUserId], references: [id])
+  resellerUserId String?
+  reseller      User?                @relation("ResellerAccounts", fields: [resellerUserId], references: [id])
+  planName      String?
+  status        HostingAccountStatus @default(PROVISIONING)
+  homeDir       String?
+  docRoot       String?
+  ipAddress     String?
+  port          Int?
+  sslEnabled    Boolean              @default(false)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  dnsZones      DnsZone[]
+  jobs          ProvisionJob[]
+}
+
+enum HostingAccountStatus {
+  PROVISIONING
+  ACTIVE
+  SUSPENDED
+  FAILED
+}
+
+model DnsZone {
+  id               String      @id @default(uuid())
+  hostingAccountId String?
+  hostingAccount   HostingAccount? @relation(fields: [hostingAccountId], references: [id])
+  domain           String      @unique
+  cloudflareZoneId String?
+  syncStatus       String      @default("PENDING")
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  records          DnsRecord[]
+}
+
+model DnsRecord {
+  id                String        @id @default(uuid())
+  zoneId            String
+  zone              DnsZone       @relation(fields: [zoneId], references: [id])
+  type              DnsRecordType
+  name              String
+  content           String
+  ttl               Int           @default(300)
+  proxied           Boolean       @default(false)
+  cloudflareRecordId String?
+  status            String        @default("PENDING")
+  createdAt         DateTime      @default(now())
+}
+
+enum DnsRecordType {
+  A
+  CNAME
+  TXT
+}
+
+model ProvisionJob {
+  id               String             @id @default(uuid())
+  hostingAccountId String?
+  hostingAccount   HostingAccount?    @relation(fields: [hostingAccountId], references: [id])
+  requestedById    String?
+  requestedBy      User?              @relation("RequestedJobs", fields: [requestedById], references: [id])
+  type             ProvisionJobType   @default(CREATE_HOSTING_ACCOUNT)
+  status           ProvisionJobStatus @default(PENDING)
+  payload          Json?
+  retries          Int                @default(0)
+  error            String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  startedAt        DateTime?
+  completedAt      DateTime?
+  steps            ProvisionJobStep[]
+}
+
+model ProvisionJobStep {
+  id          String              @id @default(uuid())
+  jobId        String
+  job          ProvisionJob       @relation(fields: [jobId], references: [id])
+  step         String
+  status       ProvisionStepStatus @default(PENDING)
+  output       Json?
+  error        String?
+  createdAt    DateTime            @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+}
+
+enum ProvisionJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum ProvisionStepStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum ProvisionJobType {
+  CREATE_HOSTING_ACCOUNT
+}
+
+model ServiceStatusSnapshot {
+  id          String   @id @default(uuid())
+  nginx       String
+  mysql       String
+  postgresql  String
+  pm2         String
+  diskUsage   Float
+  ramUsage    Float
+  cpuUsage    Float
+  capturedAt  DateTime @default(now())
 }
 
 model Account {
