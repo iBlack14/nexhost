@@ -21,7 +21,10 @@ model User {
   invoices  Invoice[]
 }
 
-enum Role { ADMIN CLIENT }
+enum Role {
+  ADMIN
+  CLIENT
+}
 
 model Account {
   id        String        @id @default(uuid())
@@ -39,7 +42,12 @@ model Account {
   nodeApps  NodeApp[]
 }
 
-enum AccountStatus { ACTIVE SUSPENDED PENDING EXPIRED }
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+  EXPIRED
+}
 
 model Plan {
   id           String    @id @default(uuid())
@@ -73,8 +81,18 @@ model Domain {
   updatedAt  DateTime     @updatedAt
 }
 
-enum DomainType   { WORDPRESS NODE STATIC PHP }
-enum DomainStatus { ACTIVE INACTIVE SUSPENDED }
+enum DomainType {
+  WORDPRESS
+  NODE
+  STATIC
+  PHP
+}
+
+enum DomainStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
 
 model Database {
   id        String   @id @default(uuid())
@@ -109,7 +127,11 @@ model NodeApp {
   updatedAt DateTime  @updatedAt
 }
 
-enum AppStatus { RUNNING STOPPED ERROR }
+enum AppStatus {
+  RUNNING
+  STOPPED
+  ERROR
+}
 
 model Ticket {
   id        String         @id @default(uuid())
@@ -132,8 +154,19 @@ model TicketMessage {
   createdAt DateTime @default(now())
 }
 
-enum TicketStatus { OPEN IN_PROGRESS RESOLVED CLOSED }
-enum Priority    { LOW MEDIUM HIGH CRITICAL }
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
 
 model Invoice {
   id        String        @id @default(uuid())
@@ -148,4 +181,9 @@ model Invoice {
   createdAt DateTime      @default(now())
 }
 
-enum InvoiceStatus { PENDING PAID OVERDUE CANCELLED }
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
