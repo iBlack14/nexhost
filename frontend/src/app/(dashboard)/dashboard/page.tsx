@@ -10,7 +10,7 @@ export default function DashboardPage() {
   const { data: apps }    = useNodeApps()
   const { data: tickets } = useTickets()
 
-  const openTickets = tickets?.filter(t => t.status === 'open' || t.status === 'in_progress') || []
+  const openTickets = (tickets as any)?.filter((t: any) => t.status === 'open' || t.status === 'in_progress') || []
 
   const stats = [
     { label: 'Dominios',       value: domains?.length || 0, icon: <Globe size={16} />,     color: 'text-blue-400' },
@@ -33,7 +33,7 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
-        {stats.map(s => (
+        {stats.map((s: any) => (
           <div key={s.label} className="nx-card p-4">
             <div className={clsx('mb-2', s.color)}>{s.icon}</div>
             <div className={clsx('text-2xl font-semibold font-mono', s.color)}>{s.value}</div>
@@ -54,7 +54,7 @@ export default function DashboardPage() {
               No tienes dominios aún. ¡Agrega tu primero!
             </p>
           )}
-          {domains?.map(d => (
+          {domains?.map((d: any) => (
             <div key={d.id} className="flex items-center gap-3 px-4 py-3 border-b border-nx-border last:border-0 hover:bg-white/[0.02]">
               <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
                 <Globe size={14} className="text-blue-400" />
@@ -89,7 +89,7 @@ export default function DashboardPage() {
           {apps?.length === 0 && (
             <p className="text-sm text-nx-muted px-4 py-6 text-center">No tienes apps Node.js.</p>
           )}
-          {apps?.map(app => (
+          {apps?.map((app: any) => (
             <div key={app.id} className="flex items-center gap-3 px-4 py-3 border-b border-nx-border last:border-0">
               <span className={clsx(
                 'w-2 h-2 rounded-full',
