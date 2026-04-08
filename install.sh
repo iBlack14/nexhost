@@ -55,6 +55,7 @@ echo -e "${BLUE}🐘 Configurando PostgreSQL...${NC}"
 sudo -u postgres psql -c "CREATE DATABASE nexhost;" || true
 sudo -u postgres psql -c "CREATE USER nexadmin WITH PASSWORD '$DB_PASSWORD';" || true
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE nexhost TO nexadmin;" || true
+sudo -u postgres psql -d nexhost -c "GRANT ALL ON SCHEMA public TO nexadmin;" || true
 
 # 6. Configuración de MySQL
 echo -e "${BLUE}🐬 Configurando MySQL Root...${NC}"
