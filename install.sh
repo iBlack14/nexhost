@@ -135,7 +135,12 @@ SMTP_PASS=tu-clave-app
 SMTP_FROM="NexHost <noreply@example.com>"
 EOF
 
-npx prisma migrate deploy
+if [ -d "prisma/migrations" ] && [ "$(find prisma/migrations -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)" -gt 0 ]; then
+  npx prisma migrate deploy
+else
+  echo -e "${BLUE}ℹ️ No hay migraciones Prisma, aplicando esquema con db push...${NC}"
+  npx prisma db push
+fi
 npx prisma generate
 pm2 delete nexhost-api || true
 pm2 start src/index.js --name nexhost-api -- --port $BACKEND_PORT
