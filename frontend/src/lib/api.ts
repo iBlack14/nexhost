@@ -2,8 +2,11 @@
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
 
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
+const apiBase = rawApiUrl.replace(/\/api\/?$/, '')
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL + '/api',
+  baseURL: `${apiBase}/api`,
   timeout: 15000,
 })
 

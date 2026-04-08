@@ -2,6 +2,9 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
 
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const apiBase = rawApiUrl.replace(/\/api\/?$/, "");
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -12,7 +15,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials: any) {
         try {
-          const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+          const res = await axios.post(`${apiBase}/api/auth/login`, {
             email: credentials?.email,
             password: credentials?.password,
           });
