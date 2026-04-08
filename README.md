@@ -58,6 +58,21 @@ npm install
 npm run dev                  # Puerto 3000
 ```
 
+## 🚀 Despliegue en VPS (One-Line Installer)
+
+Si usas Ubuntu (Contabo, DigitalOcean, etc.), puedes instalar todo el stack automáticamente con este comando:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/install.sh | bash
+```
+
+El instalador te preguntará por:
+1.  **Puerto del Backend** (API).
+2.  **Puerto del Frontend** (Panel).
+3.  **Nombre del repositorio** (para clonar la última versión).
+
+El script configurará Node.js, PostgreSQL, MySQL y PM2 de forma automática.
+
 ## Roles de usuario
 
 | Rol | Acceso |
