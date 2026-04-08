@@ -14,18 +14,17 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${GREEN}             🚀 NEXHOST — AUTO INSTALLER v1.0               ${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-# 1. Configuración de Puertos
-read -p "🔹 Puerto para el BACKEND [default 4000]: " BACKEND_PORT
+# 1. Configuración de Puertos e Información
+echo -e "🔹 Configuración de red (presiona Enter para usar valores por defecto)"
+
+read -p "   Puerto BACKEND [4000]: " BACKEND_PORT < /dev/tty
 BACKEND_PORT=${BACKEND_PORT:-4000}
 
-read -p "🔹 Puerto para el FRONTEND [default 3000]: " FRONTEND_PORT
+read -p "   Puerto FRONTEND [3000]: " FRONTEND_PORT < /dev/tty
 FRONTEND_PORT=${FRONTEND_PORT:-3000}
 
-read -p "🔹 GitHub Repository (ej: usuario/repo): " REPO_NAME
-if [ -z "$REPO_NAME" ]; then
-    echo "❌ Error: Debes proporcionar el nombre del repositorio para clonarlo."
-    exit 1
-fi
+read -p "   GitHub Repository [iBlack14/nexhost]: " REPO_NAME < /dev/tty
+REPO_NAME=${REPO_NAME:-"iBlack14/nexhost"}
 
 # 2. Generación de Secretos
 DB_PASSWORD=$(openssl rand -base64 12)
