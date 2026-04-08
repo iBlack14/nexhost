@@ -69,22 +69,25 @@ sudo mkdir -p $INSTALL_DIR
 sudo git clone https://github.com/$REPO_NAME.git $INSTALL_DIR
 sudo chown -R $USER:$USER $INSTALL_DIR
 
-# 8. Configuración del Backend
+# 8. Configurar API (Backend)
 echo -e "${BLUE}⚙️ Configurando API (Backend)...${NC}"
 cd $INSTALL_DIR/backend
 npm install
+
+# Crear .env robusto para Backend
 cat <<EOF > .env
 PORT=$BACKEND_PORT
 NODE_ENV=production
-DATABASE_URL="postgresql://nexadmin:$DB_PASSWORD@localhost:5432/nexhost"
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_ROOT_USER=root
-MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASS
+DATABASE_URL="postgresql://nexadmin:${DB_PASSWORD}@127.0.0.1:5432/nexhost"
 JWT_SECRET=$JWT_SECRET
-NEXTAUTH_SECRET=$JWT_SECRET
-FRONTEND_URL="http://$SERVER_IP:$FRONTEND_PORT"
+NEXT_PUBLIC_API_URL="http://${SERVER_IP}:${BACKEND_PORT}/api"
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=tu-email@gmail.com
+SMTP_PASS=tu-clave-app
+SMTP_FROM="NexHost <noreply@example.com>"
 EOF
+
 npx prisma migrate deploy
 npx prisma generate
 pm2 delete nexhost-api || true
